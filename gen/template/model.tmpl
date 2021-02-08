@@ -1,0 +1,27 @@
+package model
+
+import (
+	"database/sql"
+	"github.com/go-sql-driver/mysql"
+	xtime "github.com/bensema/library/time"
+)
+
+{{range $key, $T := .}}
+
+type {{$T.TableNameGo}} struct {
+{{range $j, $item := .TableDesc}}  {{$item.TableDesc.GoColumnName}}    {{$item.TableDesc.GolangType}}   {{$item.FormatFields}}  {{if $item.TableDesc.ColumnComment}}  // {{$item.TableDesc.ColumnComment}}{{end}}
+{{end}}
+}
+
+
+func (m *{{.TableNameGo}}) Table() string {
+return "{{.TableName}}"
+}
+func (m *{{.TableNameGo}}) Columns() []string {
+return []string{ {{range $j, $item := .TableDesc}} "{{$item.DbOriField}}",{{end}} }
+}
+func (m *{{.TableNameGo}}) Fields() []interface{} {
+return []interface{}{ {{range $j, $item := .TableDesc}} &m.{{$item.TableDesc.GoColumnName}},{{end}} }
+}
+
+{{end}}
