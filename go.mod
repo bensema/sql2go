@@ -1,4 +1,4 @@
-module sql2go
+module github.com/bensema/sql2go
 
 go 1.15
 
