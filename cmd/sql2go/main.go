@@ -3,10 +3,10 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"github.com/bensema/sql2go/core"
+	"github.com/bensema/sql2go/database"
 	"github.com/urfave/cli/v2"
 	"os"
-	"sql2go/core"
-	"sql2go/database"
 	"strings"
 )
 

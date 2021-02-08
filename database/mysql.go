@@ -3,8 +3,8 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"github.com/bensema/sql2go"
 	_ "github.com/go-sql-driver/mysql"
-	"sql2go"
 	"strings"
 )
 

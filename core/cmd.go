@@ -3,9 +3,9 @@ package core
 import (
 	"bufio"
 	"fmt"
+	"github.com/bensema/sql2go"
 	"log"
 	"os"
-	"sql2go"
 	"strings"
 )
 

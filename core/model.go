@@ -3,12 +3,12 @@ package core
 import (
 	"bytes"
 	"fmt"
+	"github.com/bensema/sql2go"
+	"github.com/bensema/sql2go/database"
+	"github.com/bensema/sql2go/gen"
 	"html/template"
 	"log"
 	"path"
-	"sql2go"
-	"sql2go/database"
-	"sql2go/gen"
 	"strings"
 )
 

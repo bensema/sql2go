@@ -1,6 +1,6 @@
 package gen
 
-import "sql2go/gen/internal"
+import "github.com/bensema/sql2go/gen/internal"
 
 const (
 	TplMarkdown = "template/markdown.tmpl"

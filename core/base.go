@@ -1,7 +1,7 @@
 package core
 
 import (
-	"sql2go/database"
+	"github.com/bensema/sql2go/database"
 )
 
 const (
