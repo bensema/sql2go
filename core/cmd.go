@@ -32,6 +32,7 @@ func (c *Cmd) Handlers() map[string]func(s2g *S2G, args ...interface{}) int {
 		"0": c.customDir,
 		"1": c.markDown,
 		"2": c.model,
+		"3": c.curd,
 		"c": c.clean,
 		"h": c.help,
 		"q": c.quit,
@@ -89,11 +90,22 @@ func (c *Cmd) model(s2g *S2G, args ...interface{}) int {
 	case "yes", "y":
 		formats = c._setFormat()
 	}
-	err := s2g.createEntity(formats)
+	err := s2g.createModel(formats)
 	if err != nil {
 		log.Println("GenerateEntry>>", err)
 	}
 	go sql2go.Gofmt(sql2go.GetExeRootDir())
+	return 0
+}
+
+//model
+func (c *Cmd) curd(s2g *S2G, args ...interface{}) int {
+	var formats []string
+
+	err := s2g.createCurd(formats)
+	if err != nil {
+		log.Println("Generate curd>>", err)
+	}
 	return 0
 }
 

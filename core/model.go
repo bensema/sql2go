@@ -34,10 +34,11 @@ type EntityReq struct {
 }
 
 // 生成结构实体文件
-func (s2g *S2G) createEntity(formatList []string) (err error) {
+func (s2g *S2G) createModel(formatList []string) (err error) {
 	// 表结构文件路径
 	createDir(path.Join(s2g.OutPath, GODIR_Model))
-	filePath := path.Join(s2g.OutPath, GODIR_Model, GOFILE_ENTITY)
+	filePath := path.Join(s2g.OutPath, GODIR_Model, "model.go")
+	filePathModelReq := path.Join(s2g.OutPath, GODIR_Model, "model_req.go")
 	// 将表结构写入文件
 	tables, err := s2g.Db.FindTables()
 	if err != nil {
@@ -68,21 +69,25 @@ func (s2g *S2G) createEntity(formatList []string) (err error) {
 		req.TableComment = table.Comment
 		req.TableDesc = fieldsInfos
 		req.FormatList = formatList
-		req.EntityPkg = PkgEntity
+		req.EntityPkg = PkgModel
 		reqs = append(reqs, *req)
 	}
 
 	// 生成基础信息
-	err = s2g.generateDBEntity(reqs, filePath)
+	err = s2g.generateModel(reqs, filePath)
 	if err != nil {
-		log.Fatal("CreateEntityErr>>", err)
+		log.Fatal("Create Model error>>", err)
+	}
+	err = s2g.generateModelReq(reqs, filePathModelReq)
+	if err != nil {
+		log.Fatal("Create Model req error>>", err)
 	}
 
 	return
 }
 
 // 创建结构实体
-func (s2g *S2G) generateDBEntity(req []EntityReq, filePath string) (err error) {
+func (s2g *S2G) generateModel(req []EntityReq, filePath string) (err error) {
 
 	// 加载模板文件
 	tplByte, err := gen.Asset(gen.TplModel)
@@ -90,6 +95,32 @@ func (s2g *S2G) generateDBEntity(req []EntityReq, filePath string) (err error) {
 		return
 	}
 	tpl, err := template.New("model").Parse(string(tplByte))
+	if err != nil {
+		return
+	}
+
+	content := bytes.NewBuffer([]byte{})
+	err = tpl.Execute(content, req)
+	if err != nil {
+		fmt.Println(err)
+	}
+	// 表信息写入文件
+	con := strings.Replace(content.String(), "&#34;", `"`, -1)
+	err = WriteFile(filePath, con)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (s2g *S2G) generateModelReq(req []EntityReq, filePath string) (err error) {
+
+	// 加载模板文件
+	tplByte, err := gen.Asset(gen.TplModelReq)
+	if err != nil {
+		return
+	}
+	tpl, err := template.New("model_req").Parse(string(tplByte))
 	if err != nil {
 		return
 	}

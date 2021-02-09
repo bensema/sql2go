@@ -1,0 +1,109 @@
+package internal
+
+import (
+	"github.com/bensema/library/context"
+	"github.com/bensema/library/sql"
+	entsql "entgo.io/ent/dialect/sql"
+	"strings"
+)
+
+func Create{{.TableNameGo}}(c *context.Context, db *sql.DB, obj *model.{{.TableNameGo}}) (err error) {
+	builder := sqlBuilder()
+	query, args := builder.Insert(obj.Table()).Columns(obj.Columns()...).Values(obj.Fields()...).Query()
+	_, err = db.ExecContext(c, query, args...)
+	return err
+}
+
+func Delete{{.TableNameGo}}ById(c *context.Context, db *sql.DB, id string) (err error) {
+	obj := &model.{{.TableNameGo}}{}
+	builder := sqlBuilder()
+	query, args := builder.Delete(obj.Table()).Where(entsql.EQ("id", id)).Query()
+	_, err = db.ExecContext(c, query, args...)
+	return err
+}
+
+func Update{{.TableNameGo}}ById(c *context.Context, db *sql.DB, id string, key string, value interface{}) (err error) {
+	obj := &model.{{.TableNameGo}}{}
+	builder := sqlBuilder()
+	query, args := builder.Update(obj.Table()).Set(key, value).Where(entsql.EQ("id", id)).Query()
+	_, err = db.ExecContext(c, query, args...)
+	return
+}
+
+func Get{{.TableNameGo}}ById(c *context.Context, db *sql.DB, id string) (obj *model.{{.TableNameGo}}, err error) {
+	obj = &model.{{.TableNameGo}}{}
+	builder := sqlBuilder()
+	query, args := builder.Select(obj.Columns()...).From(entsql.Table(obj.Table())).Where(entsql.EQ("id", id)).Query()
+	err = db.QueryRowContext(c, query, args...).Scan(obj.Fields()...)
+	return
+}
+
+func Find{{.TableNameGo}}(c *context.Context, db *sql.DB, req *model.Find{{.TableNameGo}}Req) (objs []*model.{{.TableNameGo}}, err error) {
+	objs = []*model.{{.TableNameGo}}{}
+	query, args := buildSqlFind{{.TableNameGo}}(req, SQLTypeList)
+	rows, err := db.QueryContext(c, query, args...)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		obj := &model.{{.TableNameGo}}{}
+		err = rows.Scan(obj.Fields()...)
+		if err != nil {
+			return
+		}
+		objs = append(objs, obj)
+	}
+	return
+}
+
+func Find{{.TableNameGo}}Total(c *context.Context, db *sql.DB, req *model.Find{{.TableNameGo}}Req) (total int, err error) {
+	total = 0
+	query, args := buildSqlFind{{.TableNameGo}}(req, SQLTypeCount)
+	err = db.QueryRowContext(c, query, args...).Scan(&total)
+	return
+}
+
+func buildSqlFind{{.TableNameGo}}(req *model.Find{{.TableNameGo}}Req, sqlType string) (string, []interface{}) {
+	obj := &model.{{.TableNameGo}}{}
+	builder := sqlBuilder()
+	selector := &entsql.Selector{}
+	switch sqlType {
+	case SQLTypeList:
+		selector = builder.Select(obj.Columns()...)
+	case SQLTypeCount:
+		selector = builder.Select("Count(*)")
+	}
+
+	selector = selector.From(entsql.Table(obj.Table()))
+
+	if req.Id != "" {
+		selector = selector.Where(entsql.EQ("id", req.Id))
+	}
+
+	// count 返回
+	if sqlType == SQLTypeCount {
+		return selector.Query()
+	}
+
+	_sort := ""
+	switch req.Sort {
+	case "desc":
+		_sort = entsql.Desc(req.OrderBy)
+	case "asc":
+		_sort = entsql.Asc(req.OrderBy)
+	default:
+		_sort = entsql.Asc(req.OrderBy)
+	}
+
+	orderByList := strings.Split(req.OrderBy, ",")
+	for _, orderBy := range orderByList{
+		if checkInStr(obj.Columns(), orderBy) {
+			selector = selector.OrderBy(_sort)
+		}
+	}
+	
+	selector.Offset((req.Num - 1) * req.Size)
+	selector.Limit(req.Size)
+	return selector.Query()
+}

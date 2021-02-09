@@ -1,0 +1,20 @@
+package model
+
+type Pagination struct {
+	Num  int `json:"num"`
+	Size int `json:"size"`
+}
+
+{{range $key, $T := .}}
+
+type Find{{$T.TableNameGo}}Req struct {
+    {{$T.TableNameGo}}
+
+	OrderBy string `json:"order_by"`
+	Sort    string `json:"sort"`
+
+	Pagination
+}
+
+
+{{end}}

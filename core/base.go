@@ -5,9 +5,9 @@ import (
 )
 
 const (
-	GODIR_Model   = "model"        // entity file
-	GOFILE_ENTITY = "db_entity.go" // entity table file
-	PkgEntity     = "model"        // entity package name
+	GODIR_Model    = "model"    // entity file
+	GODIR_Internal = "internal" // entity file
+	PkgModel       = "model"    // entity package name
 
 )
 
