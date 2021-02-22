@@ -39,6 +39,8 @@ func (s2g *S2G) createModel(formatList []string) (err error) {
 	createDir(path.Join(s2g.OutPath, GODIR_Model))
 	filePath := path.Join(s2g.OutPath, GODIR_Model, "model.go")
 	filePathModelReq := path.Join(s2g.OutPath, GODIR_Model, "model_req.go")
+	filePathModelReply := path.Join(s2g.OutPath, GODIR_Model, "model_reply.go")
+	filePathModelpage := path.Join(s2g.OutPath, GODIR_Model, "page.go")
 	// 将表结构写入文件
 	tables, err := s2g.Db.FindTables()
 	if err != nil {
@@ -82,6 +84,14 @@ func (s2g *S2G) createModel(formatList []string) (err error) {
 	if err != nil {
 		log.Fatal("Create Model req error>>", err)
 	}
+	err = s2g.generateModelReply(reqs, filePathModelReply)
+	if err != nil {
+		log.Fatal("Create Model reply error>>", err)
+	}
+	err = s2g.generateModelPage(reqs, filePathModelpage)
+	if err != nil {
+		log.Fatal("Create Model page error>>", err)
+	}
 
 	return
 }
@@ -121,6 +131,58 @@ func (s2g *S2G) generateModelReq(req []EntityReq, filePath string) (err error) {
 		return
 	}
 	tpl, err := template.New("model_req").Parse(string(tplByte))
+	if err != nil {
+		return
+	}
+
+	content := bytes.NewBuffer([]byte{})
+	err = tpl.Execute(content, req)
+	if err != nil {
+		fmt.Println(err)
+	}
+	// 表信息写入文件
+	con := strings.Replace(content.String(), "&#34;", `"`, -1)
+	err = WriteFile(filePath, con)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (s2g *S2G) generateModelReply(req []EntityReq, filePath string) (err error) {
+
+	// 加载模板文件
+	tplByte, err := gen.Asset(gen.TplModelReply)
+	if err != nil {
+		return
+	}
+	tpl, err := template.New("model_reply").Parse(string(tplByte))
+	if err != nil {
+		return
+	}
+
+	content := bytes.NewBuffer([]byte{})
+	err = tpl.Execute(content, req)
+	if err != nil {
+		fmt.Println(err)
+	}
+	// 表信息写入文件
+	con := strings.Replace(content.String(), "&#34;", `"`, -1)
+	err = WriteFile(filePath, con)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (s2g *S2G) generateModelPage(req []EntityReq, filePath string) (err error) {
+
+	// 加载模板文件
+	tplByte, err := gen.Asset(gen.TplModelPage)
+	if err != nil {
+		return
+	}
+	tpl, err := template.New("page").Parse(string(tplByte))
 	if err != nil {
 		return
 	}
