@@ -1,0 +1,41 @@
+package dao
+
+import (
+	"github.com/bensema/goadmin/dao/internal"
+	"github.com/bensema/goadmin/model"
+	"github.com/gin-gonic/gin"
+)
+
+{{range $key, $T := .}}
+
+
+func (d *Dao) Create{{.TableNameGo}}(c *gin.Context, m *model.{{.TableNameGo}}) error {
+	return internal.Create{{.TableNameGo}}(c, d.db, m)
+}
+
+func (d *Dao) Delete{{.TableNameGo}}ById(c *gin.Context, id int) error {
+	return internal.Delete{{.TableNameGo}}ById(c, d.db, id)
+}
+
+func (d *Dao) Update{{.TableNameGo}}ById(c *gin.Context, id int, key string, value interface{}) error {
+	return internal.Update{{.TableNameGo}}ById(c, d.db, id, key, value)
+}
+
+func (d *Dao) Get{{.TableNameGo}}ById(c *gin.Context, id int) (*model.{{.TableNameGo}}, error) {
+	return internal.Get{{.TableNameGo}}ById(c, d.db, id)
+}
+
+func (d *Dao) Find{{.TableNameGo}}(c *gin.Context, req *model.Find{{.TableNameGo}}Req) ([]*model.{{.TableNameGo}}, error) {
+	return internal.Find{{.TableNameGo}}(c, d.db, req)
+}
+
+func (d *Dao) PageFind{{.TableNameGo}}Total(c *gin.Context, req *model.Find{{.TableNameGo}}Req) (int, error) {
+	return internal.PageFind{{.TableNameGo}}Total(c, d.db, req)
+}
+
+func (d *Dao) PageFind{{.TableNameGo}}(c *gin.Context, req *model.Find{{.TableNameGo}}Req) ([]*model.{{.TableNameGo}}, error) {
+	return internal.PageFind{{.TableNameGo}}(c, d.db, req)
+}
+
+
+{{end}}

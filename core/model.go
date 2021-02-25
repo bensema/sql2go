@@ -40,7 +40,8 @@ func (s2g *S2G) createModel(formatList []string) (err error) {
 	filePath := path.Join(s2g.OutPath, GODIR_Model, "model.go")
 	filePathModelReq := path.Join(s2g.OutPath, GODIR_Model, "model_req.go")
 	filePathModelReply := path.Join(s2g.OutPath, GODIR_Model, "model_reply.go")
-	filePathModelpage := path.Join(s2g.OutPath, GODIR_Model, "page.go")
+	filePathModelPage := path.Join(s2g.OutPath, GODIR_Model, "page.go")
+	biz := path.Join(s2g.OutPath, "biz.go")
 	// 将表结构写入文件
 	tables, err := s2g.Db.FindTables()
 	if err != nil {
@@ -88,9 +89,14 @@ func (s2g *S2G) createModel(formatList []string) (err error) {
 	if err != nil {
 		log.Fatal("Create Model reply error>>", err)
 	}
-	err = s2g.generateModelPage(reqs, filePathModelpage)
+	err = s2g.generateModelPage(reqs, filePathModelPage)
 	if err != nil {
 		log.Fatal("Create Model page error>>", err)
+	}
+
+	err = s2g.generateModelBiz(reqs, biz)
+	if err != nil {
+		log.Fatal("Create biz error>>", err)
 	}
 
 	return
@@ -179,6 +185,32 @@ func (s2g *S2G) generateModelPage(req []EntityReq, filePath string) (err error) 
 
 	// 加载模板文件
 	tplByte, err := gen.Asset(gen.TplModelPage)
+	if err != nil {
+		return
+	}
+	tpl, err := template.New("page").Parse(string(tplByte))
+	if err != nil {
+		return
+	}
+
+	content := bytes.NewBuffer([]byte{})
+	err = tpl.Execute(content, req)
+	if err != nil {
+		fmt.Println(err)
+	}
+	// 表信息写入文件
+	con := strings.Replace(content.String(), "&#34;", `"`, -1)
+	err = WriteFile(filePath, con)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (s2g *S2G) generateModelBiz(req []EntityReq, filePath string) (err error) {
+
+	// 加载模板文件
+	tplByte, err := gen.Asset(gen.TplBiz)
 	if err != nil {
 		return
 	}
