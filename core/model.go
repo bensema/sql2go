@@ -6,10 +6,10 @@ import (
 	"github.com/bensema/sql2go"
 	"github.com/bensema/sql2go/database"
 	"github.com/bensema/sql2go/gen"
-	"html/template"
 	"log"
 	"path"
 	"strings"
+	"text/template"
 )
 
 // 表字段信息

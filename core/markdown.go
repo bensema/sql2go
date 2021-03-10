@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"github.com/bensema/sql2go/database"
 	"github.com/bensema/sql2go/gen"
-	"html/template"
 	"log"
 	"strings"
+	"text/template"
 	"time"
 )
 

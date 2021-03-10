@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"github.com/bensema/sql2go"
 	"github.com/bensema/sql2go/gen"
-	"html/template"
 	"log"
 	"path"
 	"strings"
+	"text/template"
 )
 
 // 生成结构实体文件
@@ -66,8 +66,8 @@ func (s2g *S2G) createCurd(formatList []string) (err error) {
 func (s2g *S2G) generateDBCurd(req *EntityReq, filePath string) (err error) {
 
 	// 加载模板文件
-	tplByte, err := gen.Asset(gen.TplCurd)
-	//tplByte, err := gen.Asset("template/curd_1.tmpl")
+	//tplByte, err := gen.Asset(gen.TplCurd)
+	tplByte, err := gen.Asset("template/curd_1.tmpl")
 	if err != nil {
 		return
 	}
