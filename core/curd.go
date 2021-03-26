@@ -67,7 +67,7 @@ func (s2g *S2G) generateDBCurd(req *EntityReq, filePath string) (err error) {
 
 	// 加载模板文件
 	//tplByte, err := gen.Asset(gen.TplCurd)
-	tplByte, err := gen.Asset("template/curd_1.tmpl")
+	tplByte, err := gen.Asset(gen.TplCurd1)
 	if err != nil {
 		return
 	}

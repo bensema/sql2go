@@ -10,6 +10,7 @@ const (
 	TplModelPage  = "template/page.tmpl"
 	TplBiz        = "template/biz.tmpl"
 	TplCurd       = "template/curd.tmpl"
+	TplCurd1      = "template/curd_1.tmpl"
 	TplCurdCommon = "template/curd_common.tmpl"
 )
 

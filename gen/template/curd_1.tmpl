@@ -1,11 +1,11 @@
 package internal
 
 import (
-	"github.com/bensema/goadmin/model"
-    "github.com/gin-gonic/gin"
-    "database/sql"
-    entsql "entgo.io/ent/dialect/sql"
-    "strings"
+	"database/sql"
+	entsql "entgo.io/ent/dialect/sql"
+	"github.com/bensema/betbit/model"
+	"github.com/gin-gonic/gin"
+	"strings"
 )
 
 func Create{{.TableNameGo}}(c *gin.Context, db *sql.DB, obj *model.{{.TableNameGo}}) (err error) {
@@ -57,7 +57,6 @@ func Find{{.TableNameGo}}(c *gin.Context, db *sql.DB, req *model.Find{{.TableNam
 	return
 }
 
-
 func PageFind{{.TableNameGo}}(c *gin.Context, db *sql.DB, req *model.Find{{.TableNameGo}}Req) (objs []*model.{{.TableNameGo}}, err error) {
 	objs = []*model.{{.TableNameGo}}{}
 	query, args := buildSqlFind{{.TableNameGo}}(req, SqlPageList)
@@ -77,7 +76,6 @@ func PageFind{{.TableNameGo}}(c *gin.Context, db *sql.DB, req *model.Find{{.Tabl
 	return
 }
 
-
 func PageFind{{.TableNameGo}}Total(c *gin.Context, db *sql.DB, req *model.Find{{.TableNameGo}}Req) (total int, err error) {
 	total = 0
 	query, args := buildSqlFind{{.TableNameGo}}(req, SqlPageCount)
@@ -93,7 +91,7 @@ func buildSqlFind{{.TableNameGo}}(req *model.Find{{.TableNameGo}}Req, sqlType st
 	case SqlPageList:
 		selector = builder.Select(obj.Columns()...)
     case SqlFind:
-            selector = builder.Select(obj.Columns()...)
+        selector = builder.Select(obj.Columns()...)
 	case SqlPageCount:
 		selector = builder.Select("Count(*)")
 	}
@@ -109,8 +107,8 @@ func buildSqlFind{{.TableNameGo}}(req *model.Find{{.TableNameGo}}Req, sqlType st
 		return selector.Query()
 	}
 	if sqlType == SqlFind {
-        return selector.Query()
-    }
+		return selector.Query()
+	}
 
 	_sort := ""
 	switch req.Sort {
@@ -123,12 +121,12 @@ func buildSqlFind{{.TableNameGo}}(req *model.Find{{.TableNameGo}}Req, sqlType st
 	}
 
 	orderByList := strings.Split(req.OrderBy, ",")
-	for _, orderBy := range orderByList{
+	for _, orderBy := range orderByList {
 		if checkInStr(obj.Columns(), orderBy) {
 			selector = selector.OrderBy(_sort)
 		}
 	}
-	
+
 	selector.Offset((req.Num - 1) * req.Size)
 	selector.Limit(req.Size)
 	return selector.Query()

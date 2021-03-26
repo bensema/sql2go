@@ -2,7 +2,7 @@ package internal
 
 import (
     "entgo.io/ent/dialect"
-	entsql "entgo.io/ent/dialect/sql"
+    entsql "entgo.io/ent/dialect/sql"
 )
 
 const (
@@ -10,7 +10,6 @@ const (
 	SqlPageCount = "page_count"
 	SqlFind      = "find"
 )
-
 
 func sqlBuilder() *entsql.DialectBuilder {
 	return entsql.Dialect(dialect.MySQL)
