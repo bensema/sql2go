@@ -1,0 +1,96 @@
+package http
+
+import (
+	"fmt"
+	"github.com/bensema/betbit/model"
+	"github.com/bensema/betbit/server/http/internal"
+	"github.com/bensema/goadmin/utils"
+	"github.com/bensema/library/biz"
+	"github.com/gin-gonic/gin"
+)
+
+func adminCommand(c *gin.Context) {
+	cmd, _ := c.Get(model.AdminCommand)
+	switch cmd {
+	{{range $key, $T := .}}
+	case biz.{{.TableNameGo}}Pages:
+		{{.TableNameGoV2}}Pages(c)
+	case biz.{{.TableNameGo}}Add:
+		{{.TableNameGoV2}}Add(c)
+	case biz.{{.TableNameGo}}Del:
+		{{.TableNameGoV2}}Del(c)
+	case biz.{{.TableNameGo}}Query:
+		{{.TableNameGoV2}}Query(c)
+	case biz.{{.TableNameGo}}Update:
+		{{.TableNameGoV2}}Update(c)
+    {{end}}
+	}
+}
+
+{{range $key, $T := .}}
+
+
+func {{.TableNameGoV2}}Pages(c *gin.Context) {
+	m := &model.Find{{.TableNameGo}}Req{}
+	orderBy, _ := c.GetQuery("order_by")
+	sort, _ := c.GetQuery("sort")
+	num, _ := c.GetQuery("num")
+	size, _ := c.GetQuery("size")
+
+	m.OrderBy = orderBy
+	m.Sort = sort
+	m.Num = utils.GetInt(num)
+	m.Size = utils.GetInt(size)
+
+	err := m.Verify()
+	reply, err := srv.{{.TableNameGo}}Pages(c, m)
+	internal.AdminData(c, reply, err)
+}
+
+func {{.TableNameGoV2}}Add(c *gin.Context) {
+	var m model.{{.TableNameGo}}
+	err := c.ShouldBind(&m)
+	if err != nil {
+		fmt.Println(err)
+	}
+	err = srv.{{.TableNameGo}}Add(c, &m)
+	internal.AdminData(c, nil, err)
+}
+
+func {{.TableNameGoV2}}Del(c *gin.Context) {
+	v := new(struct {
+		ID int `form:"id"`
+	})
+	err := c.ShouldBind(&v)
+	if err != nil {
+		fmt.Println(err)
+	}
+	err = srv.{{.TableNameGo}}Del(c, v.ID)
+	internal.AdminData(c, nil, err)
+}
+
+func {{.TableNameGoV2}}Query(c *gin.Context) {
+	v := new(struct {
+		ID int `form:"id"`
+	})
+	err := c.ShouldBind(&v)
+	if err != nil {
+		fmt.Println(err)
+	}
+	reply, err := srv.{{.TableNameGo}}Query(c, v.ID)
+	internal.AdminData(c, reply, err)
+}
+
+func {{.TableNameGoV2}}Update(c *gin.Context) {
+	var m model.{{.TableNameGo}}
+	err := c.ShouldBind(&m)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	err = srv.{{.TableNameGo}}Update(c, &m)
+	internal.AdminData(c, nil, err)
+}
+
+
+{{end}}

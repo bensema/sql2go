@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"database/sql"
 	"github.com/bensema/goadmin/dao/internal"
 	"github.com/bensema/goadmin/model"
 	"github.com/gin-gonic/gin"
@@ -9,7 +10,7 @@ import (
 {{range $key, $T := .}}
 
 
-func (d *Dao) Create{{.TableNameGo}}(c *gin.Context, m *model.{{.TableNameGo}}) error {
+func (d *Dao) Create{{.TableNameGo}}(c *gin.Context, m *model.{{.TableNameGo}}) (result sql.Result, err error) {
 	return internal.Create{{.TableNameGo}}(c, d.db, m)
 }
 

@@ -55,6 +55,17 @@ func Capitalize(s string) string {
 	return upperStr
 }
 
+//驼峰首字母小写
+func CapitalizeV2(s string) string {
+	var upperStr string
+	chars := strings.Split(s, "_")
+	for _, val := range chars {
+		upperStr += strings.ToUpper(val[0:1]) + val[1:]
+	}
+	upperStr = strings.ToLower(upperStr[:1]) + upperStr[1:]
+	return upperStr
+}
+
 func CheckCharDoSpecialArr(s string, char byte, reg string) []string {
 	s = CheckCharDoSpecial(s, char, reg)
 	return strings.Split(s, string(char))

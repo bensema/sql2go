@@ -8,11 +8,10 @@ import (
 	"strings"
 )
 
-func Create{{.TableNameGo}}(c *gin.Context, db *sql.DB, obj *model.{{.TableNameGo}}) (err error) {
+func Create{{.TableNameGo}}(c *gin.Context, db *sql.DB, obj *model.{{.TableNameGo}}) (result sql.Result, err error) {
 	builder := sqlBuilder()
 	query, args := builder.Insert(obj.Table()).Columns(obj.Columns()...).Values(obj.Fields()...).Query()
-	_, err = db.ExecContext(c, query, args...)
-	return err
+	return db.ExecContext(c, query, args...)
 }
 
 func Delete{{.TableNameGo}}ById(c *gin.Context, db *sql.DB, id int) (err error) {
@@ -90,8 +89,8 @@ func buildSqlFind{{.TableNameGo}}(req *model.Find{{.TableNameGo}}Req, sqlType st
 	switch sqlType {
 	case SqlPageList:
 		selector = builder.Select(obj.Columns()...)
-    case SqlFind:
-        selector = builder.Select(obj.Columns()...)
+	case SqlFind:
+		selector = builder.Select(obj.Columns()...)
 	case SqlPageCount:
 		selector = builder.Select("Count(*)")
 	}

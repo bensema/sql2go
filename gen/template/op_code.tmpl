@@ -1,0 +1,13 @@
+package model
+
+type OpCode string
+
+const(
+{{range $key, $T := .}}
+
+	Op{{.TableNameGo}}Add    OpCode = "{{.TableName}}_add"
+	Op{{.TableNameGo}}Del    OpCode = "{{.TableName}}_del"
+	Op{{.TableNameGo}}Update OpCode = "{{.TableName}}_update"
+
+{{end}}
+)

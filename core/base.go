@@ -7,6 +7,9 @@ import (
 const (
 	GODIR_Model    = "model"    // entity file
 	GODIR_Internal = "internal" // entity file
+	GODIRService   = "service"  // entity file
+	GODIRDao       = "dao"      // entity file
+	GODIRHttp      = "http"     // entity file
 	PkgModel       = "model"    // entity package name
 
 )
