@@ -50,6 +50,8 @@ func (s2g *S2G) createModel(formatList []string) (err error) {
 	opCode := path.Join(s2g.OutPath, GODIR_Model, "op_code_biz.go")
 	httpBiz := path.Join(s2g.OutPath, GODIRHttp, "http_biz.go")
 	admCmd := path.Join(s2g.OutPath, GODIRHttp, "adm_cmd.go")
+	bbAdminApiBiz := path.Join(s2g.OutPath, GODIRHttp, "bb_admin_api_biz.go")
+	bbAdminBiz := path.Join(s2g.OutPath, GODIRHttp, "bb_admin_biz.go")
 	// 将表结构写入文件
 	tables, err := s2g.Db.FindTables()
 	if err != nil {
@@ -126,6 +128,16 @@ func (s2g *S2G) createModel(formatList []string) (err error) {
 	err = s2g.generateModelAdmCmd(reqs, admCmd)
 	if err != nil {
 		log.Fatal("Create admin cmd error>>", err)
+	}
+
+	err = s2g.generateModelBBAdminBiz(reqs, bbAdminBiz)
+	if err != nil {
+		log.Fatal("Create bb admin biz error>>", err)
+	}
+
+	err = s2g.generateModelBBAdminApiBiz(reqs, bbAdminApiBiz)
+	if err != nil {
+		log.Fatal("Create bb admin api biz error>>", err)
 	}
 
 	return
@@ -344,6 +356,58 @@ func (s2g *S2G) generateModelAdmCmd(req []EntityReq, filePath string) (err error
 
 	// 加载模板文件
 	tplByte, err := gen.Asset(gen.TplAdminCmd)
+	if err != nil {
+		return
+	}
+	tpl, err := template.New("page").Parse(string(tplByte))
+	if err != nil {
+		return
+	}
+
+	content := bytes.NewBuffer([]byte{})
+	err = tpl.Execute(content, req)
+	if err != nil {
+		fmt.Println(err)
+	}
+	// 表信息写入文件
+	con := strings.Replace(content.String(), "&#34;", `"`, -1)
+	err = WriteFile(filePath, con)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (s2g *S2G) generateModelBBAdminBiz(req []EntityReq, filePath string) (err error) {
+
+	// 加载模板文件
+	tplByte, err := gen.Asset(gen.TplBBAdminBiz)
+	if err != nil {
+		return
+	}
+	tpl, err := template.New("page").Parse(string(tplByte))
+	if err != nil {
+		return
+	}
+
+	content := bytes.NewBuffer([]byte{})
+	err = tpl.Execute(content, req)
+	if err != nil {
+		fmt.Println(err)
+	}
+	// 表信息写入文件
+	con := strings.Replace(content.String(), "&#34;", `"`, -1)
+	err = WriteFile(filePath, con)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (s2g *S2G) generateModelBBAdminApiBiz(req []EntityReq, filePath string) (err error) {
+
+	// 加载模板文件
+	tplByte, err := gen.Asset(gen.TplBBAdminApiBiz)
 	if err != nil {
 		return
 	}

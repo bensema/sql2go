@@ -1,0 +1,29 @@
+import (
+	"github.com/bensema/goadmin/model"
+	"github.com/bensema/library/biz"
+	"github.com/gin-gonic/gin"
+)
+
+{{range $key, $T := .}}
+
+func (s *Service) Find{{.TableNameGo}}Page(c *gin.Context) (reply *model.AdminApiReply, err error) {
+	return s.doRequest(c, biz.{{.TableNameGo}}Pages)
+}
+
+func (s *Service) {{.TableNameGo}}Add(c *gin.Context) (reply *model.AdminApiReply, err error) {
+	return s.doRequest(c, biz.{{.TableNameGo}}Add)
+}
+
+func (s *Service) {{.TableNameGo}}Del(c *gin.Context) (reply *model.AdminApiReply, err error) {
+	return s.doRequest(c, biz.{{.TableNameGo}}Del)
+}
+
+func (s *Service) {{.TableNameGo}}Query(c *gin.Context) (reply *model.AdminApiReply, err error) {
+	return s.doRequest(c, biz.{{.TableNameGo}}Query)
+}
+
+func (s *Service) {{.TableNameGo}}Update(c *gin.Context) (reply *model.AdminApiReply, err error) {
+	return s.doRequest(c, biz.{{.TableNameGo}}Update)
+}
+
+{{end}}
