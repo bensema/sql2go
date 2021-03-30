@@ -14,9 +14,11 @@ import (
 // 生成结构实体文件
 func (s2g *S2G) createCurd(formatList []string) (err error) {
 	// 表结构文件路径
-	createDir(path.Join(s2g.OutPath, GODIR_Internal))
+	createDir(path.Join(s2g.OutPath, ProjectBB, GODIRDao))
 
-	s2g.generateCurdCommon(path.Join(s2g.OutPath, GODIR_Internal, "curd_common.go"))
+	createDir(path.Join(s2g.OutPath, ProjectBB, GODIRDao, GODIR_Internal))
+
+	s2g.generateCurdCommon(path.Join(s2g.OutPath, ProjectBB, GODIRDao, GODIR_Internal, "curd_common_biz.go"))
 	// 将表结构写入文件
 	tables, err := s2g.Db.FindTables()
 	if err != nil {
@@ -25,7 +27,7 @@ func (s2g *S2G) createCurd(formatList []string) (err error) {
 	reqs := []EntityReq{}
 	for idx, table := range tables {
 		idx++
-		filePath := path.Join(s2g.OutPath, GODIR_Internal, table.Name+"_curd.go")
+		filePath := path.Join(s2g.OutPath, ProjectBB, GODIRDao, GODIR_Internal, table.Name+"_curd_biz.go")
 		// 查询表结构信息
 		tableDesc, err := s2g.Db.GetTableColumns(table.Name)
 		if err != nil {

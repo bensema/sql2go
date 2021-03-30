@@ -5,10 +5,14 @@ import (
 )
 
 const (
+	ProjectBB      = "betbit"
+	ProjectGoAdmin = "goadmin"
+	ProjectLibrary = "library"
 	GODIR_Model    = "model"    // entity file
 	GODIR_Internal = "internal" // entity file
 	GODIRService   = "service"  // entity file
 	GODIRDao       = "dao"      // entity file
+	GODIRServer    = "server"   // entity file
 	GODIRHttp      = "http"     // entity file
 	PkgModel       = "model"    // entity package name
 
