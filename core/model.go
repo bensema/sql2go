@@ -8,6 +8,7 @@ import (
 	"github.com/bensema/sql2go/gen"
 	"log"
 	"path"
+	"regexp"
 	"strings"
 	"text/template"
 )
@@ -72,6 +73,12 @@ func (s2g *S2G) createModel(formatList []string) (err error) {
 	}
 	reqs := []EntityReq{}
 	for idx, table := range tables {
+		match, err := regexp.MatchString(`^game_result_`, table.Name)
+		if match {
+			continue
+		}
+		fmt.Println("Match: ", match, " Error: ", err)
+
 		idx++
 		// 查询表结构信息
 		tableDesc, err := s2g.Db.GetTableColumns(table.Name)
