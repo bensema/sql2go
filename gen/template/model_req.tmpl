@@ -1,10 +1,17 @@
 package model
 
+import xtime "github.com/bensema/library/time"
 
 {{range $key, $T := .}}
 
 type Find{{$T.TableNameGo}}Req struct {
     {{$T.TableNameGo}}
+    {{range $j, $item := .TableDesc}}
+        {{if eq $item.TableDesc.GolangType  "xtime.Time"}}
+            {{$item.TableDesc.GoColumnName}}From xtime.Time `json:"{{$item.TableDesc.ColumnName}}_from"`
+            {{$item.TableDesc.GoColumnName}}To xtime.Time   `json:"{{$item.TableDesc.ColumnName}}_to"`
+        {{end}}
+    {{end}}
 	OrderBy string `json:"order_by"`
 	Sort    string `json:"sort"`
 	Pagination

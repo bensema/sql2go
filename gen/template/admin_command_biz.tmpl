@@ -7,6 +7,7 @@ import (
 	"github.com/bensema/betbit/utils"
 	"github.com/bensema/library/biz"
 	"github.com/gin-gonic/gin"
+	"github.com/shopspring/decimal"
 )
 
 func adminCommand(c *gin.Context) {
@@ -26,21 +27,40 @@ func adminCommand(c *gin.Context) {
     {{end}}
 	}
 }
-
 {{range $key, $T := .}}
-
-
 func {{.TableNameGoV2}}Pages(c *gin.Context) {
 	m := &model.Find{{.TableNameGo}}Req{}
-	orderBy, _ := c.GetQuery("order_by")
-	sort, _ := c.GetQuery("sort")
-	num, _ := c.GetQuery("num")
-	size, _ := c.GetQuery("size")
-
-	m.OrderBy = orderBy
-	m.Sort = sort
-	m.Num = utils.GetInt(num)
-	m.Size = utils.GetInt(size)
+	_orderBy, _ := c.GetQuery("order_by")
+	_sort, _ := c.GetQuery("sort")
+	_num, _ := c.GetQuery("num")
+	_size, _ := c.GetQuery("size")
+    {{range $j, $item := .TableDesc -}}
+    {{$item.TableDesc.ColumnName}},_ := c.GetQuery("{{$item.TableDesc.ColumnName}}")
+    {{if eq $item.TableDesc.GolangType  "xtime.Time" -}}
+    {{$item.TableDesc.ColumnName}}_from,_ := c.GetQuery("{{$item.TableDesc.ColumnName}}_from")
+    {{$item.TableDesc.ColumnName}}_to,_ := c.GetQuery("{{$item.TableDesc.ColumnName}}_to")
+    {{ end}}
+    {{- end}}
+    {{range $j, $item := .TableDesc -}}
+        {{if eq $item.TableDesc.GolangType  "string" -}}
+    m.{{$item.TableDesc.GoColumnName}} = {{$item.TableDesc.ColumnName}}
+        {{else if eq $item.TableDesc.GolangType  "xtime.Time" -}}
+    m.{{$item.TableDesc.GoColumnName}} = xtime.Time(utils.GetInt({{$item.TableDesc.ColumnName}}))
+    m.{{$item.TableDesc.GoColumnName}}From = xtime.Time(utils.GetInt({{$item.TableDesc.ColumnName}}_from))
+    m.{{$item.TableDesc.GoColumnName}}To = xtime.Time(utils.GetInt({{$item.TableDesc.ColumnName}}_to))
+        {{else if eq $item.TableDesc.GolangType  "int" -}}
+    m.{{$item.TableDesc.GoColumnName}} = utils.GetInt({{$item.TableDesc.ColumnName}})
+        {{else if eq $item.TableDesc.GolangType  "int64" -}}
+    m.{{$item.TableDesc.GoColumnName}} = utils.GetInt64({{$item.TableDesc.ColumnName}})
+        {{else if eq $item.TableDesc.GolangType  "decimal.Decimal" -}}
+	__dc_{{$item.TableDesc.ColumnName}}, _ := decimal.NewFromString({{$item.TableDesc.ColumnName}})
+    m.{{$item.TableDesc.GoColumnName}} = __dc_{{$item.TableDesc.ColumnName}}
+    {{ end}}
+    {{- end}}
+	m.OrderBy = _orderBy
+	m.Sort = _sort
+	m.Num = utils.GetInt(_num)
+	m.Size = utils.GetInt(_size)
 
 	err := m.Verify()
 	reply, err := srv.{{.TableNameGo}}Pages(c, m)

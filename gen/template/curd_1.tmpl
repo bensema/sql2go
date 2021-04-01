@@ -30,6 +30,14 @@ func Update{{.TableNameGo}}ById(c *gin.Context, db *sql.DB, id int, key string, 
 	return
 }
 
+func Update{{.TableNameGo}}ByIdTx(c *gin.Context, tx *sql.Tx, id int, key string, value interface{}) (err error) {
+	obj := &model.{{.TableNameGo}}{}
+	builder := sqlBuilder()
+	query, args := builder.Update(obj.Table()).Set(key, value).Where(entsql.EQ("id", id)).Query()
+	_, err = tx.ExecContext(c, query, args...)
+	return
+}
+
 func Get{{.TableNameGo}}ById(c *gin.Context, db *sql.DB, id int) (obj *model.{{.TableNameGo}}, err error) {
 	obj = &model.{{.TableNameGo}}{}
 	builder := sqlBuilder()
@@ -37,6 +45,7 @@ func Get{{.TableNameGo}}ById(c *gin.Context, db *sql.DB, id int) (obj *model.{{.
 	err = db.QueryRowContext(c, query, args...).Scan(obj.Fields()...)
 	return
 }
+
 func Find{{.TableNameGo}}(c *gin.Context, db *sql.DB, req *model.Find{{.TableNameGo}}Req) (objs []*model.{{.TableNameGo}}, err error) {
 	objs = []*model.{{.TableNameGo}}{}
 	query, args := buildSqlFind{{.TableNameGo}}(req, SqlFind)
@@ -96,11 +105,24 @@ func buildSqlFind{{.TableNameGo}}(req *model.Find{{.TableNameGo}}Req, sqlType st
 	}
 
 	selector = selector.From(entsql.Table(obj.Table()))
+    {{range $j, $item := .TableDesc -}}
+    {{if eq $item.TableDesc.GolangType  "int" "int64" "float64"}}
+    if req.{{$item.TableDesc.GoColumnName}} != 0 {
+        selector = selector.Where(entsql.EQ("{{$item.TableDesc.ColumnName}}", req.{{$item.TableDesc.GoColumnName}}))
+    }
+    {{else if eq $item.TableDesc.GolangType  "string"}}
+    if req.{{$item.TableDesc.GoColumnName}} != "" {
+        selector = selector.Where(entsql.EQ("{{$item.TableDesc.ColumnName}}", req.{{$item.TableDesc.GoColumnName}}))
+    }
+    {{else if eq $item.TableDesc.GolangType  "xtime.Time"}}
+    if req.{{$item.TableDesc.GoColumnName}}From != 0 {
+        selector = selector.Where(entsql.GTE("{{$item.TableDesc.ColumnName}}", req.{{$item.TableDesc.GoColumnName}}From))
+    }
 
-	// if req.Id != "" {
-	//	  selector = selector.Where(entsql.EQ("id", req.Id))
-	// }
-
+    if req.{{$item.TableDesc.GoColumnName}}To != 0 {
+      selector = selector.Where(entsql.LT("{{$item.TableDesc.ColumnName}}", req.{{$item.TableDesc.GoColumnName}}To))
+    }{{- end}}
+    {{- end}}
 	// count 返回
 	if sqlType == SqlPageCount {
 		return selector.Query()

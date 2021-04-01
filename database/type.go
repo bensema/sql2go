@@ -10,7 +10,7 @@ var MysqlTypeToGoType = map[string]string{
 	"bigint":     "int64",
 	"float":      "float64",
 	"double":     "float64",
-	"decimal":    "float64",
+	"decimal":    "decimal.Decimal",
 	"date":       "string",
 	"time":       "string",
 	"year":       "string",
