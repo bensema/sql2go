@@ -3,11 +3,161 @@ package internal
 import (
 	"database/sql"
 	entsql "entgo.io/ent/dialect/sql"
+	{{- if eq .TableNameGo "GameResult" }}
+	"fmt"
+	{{- end}}
 	"github.com/bensema/betbit/model"
 	"github.com/gin-gonic/gin"
 	"strings"
 )
+{{if eq .TableNameGo "GameResult"}}
+func Create{{.TableNameGo}}(c *gin.Context, db *sql.DB, gameCode string, obj *model.{{.TableNameGo}}) (result sql.Result, err error) {
+	builder := sqlBuilder()
+	query, args := builder.Insert(fmt.Sprintf("%s_%s", obj.Table(), gameCode)).Columns(obj.Columns()...).Values(obj.Fields()...).Query()
+	return db.ExecContext(c, query, args...)
+}
 
+func Delete{{.TableNameGo}}ById(c *gin.Context, db *sql.DB, gameCode string, id int) (err error) {
+	obj := &model.{{.TableNameGo}}{}
+	builder := sqlBuilder()
+	query, args := builder.Delete(fmt.Sprintf("%s_%s", obj.Table(), gameCode)).Where(entsql.EQ("id", id)).Query()
+	_, err = db.ExecContext(c, query, args...)
+	return err
+}
+
+func Update{{.TableNameGo}}ById(c *gin.Context, db *sql.DB, gameCode string, id int, key string, value interface{}) (err error) {
+	obj := &model.{{.TableNameGo}}{}
+	builder := sqlBuilder()
+	query, args := builder.Update(fmt.Sprintf("%s_%s", obj.Table(), gameCode)).Set(key, value).Where(entsql.EQ("id", id)).Query()
+	_, err = db.ExecContext(c, query, args...)
+	return
+}
+
+func Update{{.TableNameGo}}ByIdTx(c *gin.Context, tx *sql.Tx, gameCode string, id int, key string, value interface{}) (err error) {
+	obj := &model.{{.TableNameGo}}{}
+	builder := sqlBuilder()
+	query, args := builder.Update(fmt.Sprintf("%s_%s", obj.Table(), gameCode)).Set(key, value).Where(entsql.EQ("id", id)).Query()
+	_, err = tx.ExecContext(c, query, args...)
+	return
+}
+
+func Get{{.TableNameGo}}ById(c *gin.Context, db *sql.DB, gameCode string, id int) (obj *model.{{.TableNameGo}}, err error) {
+	obj = &model.{{.TableNameGo}}{}
+	builder := sqlBuilder()
+	query, args := builder.Select(obj.Columns()...).From(entsql.Table(fmt.Sprintf("%s_%s", obj.Table(), gameCode))).Where(entsql.EQ("id", id)).Query()
+	err = db.QueryRowContext(c, query, args...).Scan(obj.Fields()...)
+	return
+}
+
+func Find{{.TableNameGo}}(c *gin.Context, db *sql.DB, gameCode string, req *model.Find{{.TableNameGo}}Req) (objs []*model.{{.TableNameGo}}, err error) {
+	objs = make([]*model.{{.TableNameGo}}, 0)
+	query, args := buildSqlFind{{.TableNameGo}}(req, SqlFind)
+	rows, err := db.QueryContext(c, query, args...)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		obj := &model.{{.TableNameGo}}{}
+		err = rows.Scan(obj.Fields()...)
+		if err != nil {
+			return
+		}
+		objs = append(objs, obj)
+	}
+	return
+}
+
+func PageFind{{.TableNameGo}}(c *gin.Context, db *sql.DB, gameCode string, req *model.Find{{.TableNameGo}}Req) (objs []*model.{{.TableNameGo}}, err error) {
+	objs = make([]*model.{{.TableNameGo}}, 0)
+	req.GameCode= gameCode
+	query, args := buildSqlFind{{.TableNameGo}}(req, SqlPageList)
+	rows, err := db.QueryContext(c, query, args...)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		obj := &model.{{.TableNameGo}}{}
+		err = rows.Scan(obj.Fields()...)
+		if err != nil {
+			return
+		}
+		objs = append(objs, obj)
+	}
+	return
+}
+
+func PageFind{{.TableNameGo}}Total(c *gin.Context, db *sql.DB, gameCode string, req *model.Find{{.TableNameGo}}Req) (total int, err error) {
+	total = 0
+	req.GameCode= gameCode
+	query, args := buildSqlFind{{.TableNameGo}}(req, SqlPageCount)
+	err = db.QueryRowContext(c, query, args...).Scan(&total)
+	return
+}
+
+func buildSqlFind{{.TableNameGo}}(req *model.Find{{.TableNameGo}}Req, sqlType string) (string, []interface{}) {
+	obj := &model.{{.TableNameGo}}{}
+	builder := sqlBuilder()
+	selector := &entsql.Selector{}
+	switch sqlType {
+	case SqlPageList:
+		selector = builder.Select(obj.Columns()...)
+	case SqlFind:
+		selector = builder.Select(obj.Columns()...)
+	case SqlPageCount:
+		selector = builder.Select("Count(*)")
+	}
+
+	selector = selector.From(entsql.Table(fmt.Sprintf("%s_%s", obj.Table(), req.GameCode)))
+	{{range $j, $item := .TableDesc -}}
+	{{if eq $item.TableDesc.GolangType  "int" "int64" "float64"}}
+	if req.{{$item.TableDesc.GoColumnName}} != 0 {
+		selector = selector.Where(entsql.EQ("{{$item.TableDesc.ColumnName}}", req.{{$item.TableDesc.GoColumnName}}))
+	}
+	{{else if eq $item.TableDesc.GolangType  "string"}}
+	if req.{{$item.TableDesc.GoColumnName}} != "" {
+		selector = selector.Where(entsql.EQ("{{$item.TableDesc.ColumnName}}", req.{{$item.TableDesc.GoColumnName}}))
+	}
+	{{else if eq $item.TableDesc.GolangType  "xtime.Time"}}
+	if req.{{$item.TableDesc.GoColumnName}}From != 0 {
+		selector = selector.Where(entsql.GTE("{{$item.TableDesc.ColumnName}}", req.{{$item.TableDesc.GoColumnName}}From))
+	}
+
+    if req.{{$item.TableDesc.GoColumnName}}To != 0 {
+        selector = selector.Where(entsql.LT("{{$item.TableDesc.ColumnName}}", req.{{$item.TableDesc.GoColumnName}}To))
+    }{{- end}}
+	{{- end}}
+	// count 返回
+	if sqlType == SqlPageCount {
+		return selector.Query()
+	}
+	if sqlType == SqlFind {
+		return selector.Query()
+	}
+
+	_sort := ""
+	switch req.Sort {
+	case "desc":
+		_sort = entsql.Desc(req.OrderBy)
+	case "asc":
+		_sort = entsql.Asc(req.OrderBy)
+	default:
+		_sort = entsql.Asc(req.OrderBy)
+	}
+
+	orderByList := strings.Split(req.OrderBy, ",")
+	for _, orderBy := range orderByList {
+		if checkInStr(obj.Columns(), orderBy) {
+			selector = selector.OrderBy(_sort)
+		}
+	}
+
+	selector.Offset((req.Num - 1) * req.Size)
+	selector.Limit(req.Size)
+	return selector.Query()
+}
+{{else}}
 func Create{{.TableNameGo}}(c *gin.Context, db *sql.DB, obj *model.{{.TableNameGo}}) (result sql.Result, err error) {
 	builder := sqlBuilder()
 	query, args := builder.Insert(obj.Table()).Columns(obj.Columns()...).Values(obj.Fields()...).Query()
@@ -47,7 +197,7 @@ func Get{{.TableNameGo}}ById(c *gin.Context, db *sql.DB, id int) (obj *model.{{.
 }
 
 func Find{{.TableNameGo}}(c *gin.Context, db *sql.DB, req *model.Find{{.TableNameGo}}Req) (objs []*model.{{.TableNameGo}}, err error) {
-	objs = []*model.{{.TableNameGo}}{}
+	objs = make([]*model.{{.TableNameGo}}, 0)
 	query, args := buildSqlFind{{.TableNameGo}}(req, SqlFind)
 	rows, err := db.QueryContext(c, query, args...)
 	if err != nil {
@@ -66,7 +216,7 @@ func Find{{.TableNameGo}}(c *gin.Context, db *sql.DB, req *model.Find{{.TableNam
 }
 
 func PageFind{{.TableNameGo}}(c *gin.Context, db *sql.DB, req *model.Find{{.TableNameGo}}Req) (objs []*model.{{.TableNameGo}}, err error) {
-	objs = []*model.{{.TableNameGo}}{}
+	objs = make([]*model.{{.TableNameGo}}, 0)
 	query, args := buildSqlFind{{.TableNameGo}}(req, SqlPageList)
 	rows, err := db.QueryContext(c, query, args...)
 	if err != nil {
@@ -106,23 +256,23 @@ func buildSqlFind{{.TableNameGo}}(req *model.Find{{.TableNameGo}}Req, sqlType st
 
 	selector = selector.From(entsql.Table(obj.Table()))
     {{range $j, $item := .TableDesc -}}
-    {{if eq $item.TableDesc.GolangType  "int" "int64" "float64"}}
-    if req.{{$item.TableDesc.GoColumnName}} != 0 {
-        selector = selector.Where(entsql.EQ("{{$item.TableDesc.ColumnName}}", req.{{$item.TableDesc.GoColumnName}}))
-    }
-    {{else if eq $item.TableDesc.GolangType  "string"}}
-    if req.{{$item.TableDesc.GoColumnName}} != "" {
-        selector = selector.Where(entsql.EQ("{{$item.TableDesc.ColumnName}}", req.{{$item.TableDesc.GoColumnName}}))
-    }
-    {{else if eq $item.TableDesc.GolangType  "xtime.Time"}}
-    if req.{{$item.TableDesc.GoColumnName}}From != 0 {
-        selector = selector.Where(entsql.GTE("{{$item.TableDesc.ColumnName}}", req.{{$item.TableDesc.GoColumnName}}From))
-    }
+	{{if eq $item.TableDesc.GolangType  "int" "int64" "float64"}}
+	if req.{{$item.TableDesc.GoColumnName}} != 0 {
+		selector = selector.Where(entsql.EQ("{{$item.TableDesc.ColumnName}}", req.{{$item.TableDesc.GoColumnName}}))
+	}
+	{{else if eq $item.TableDesc.GolangType  "string"}}
+	if req.{{$item.TableDesc.GoColumnName}} != "" {
+		selector = selector.Where(entsql.EQ("{{$item.TableDesc.ColumnName}}", req.{{$item.TableDesc.GoColumnName}}))
+	}
+	{{else if eq $item.TableDesc.GolangType  "xtime.Time"}}
+	if req.{{$item.TableDesc.GoColumnName}}From != 0 {
+		selector = selector.Where(entsql.GTE("{{$item.TableDesc.ColumnName}}", req.{{$item.TableDesc.GoColumnName}}From))
+	}
 
-    if req.{{$item.TableDesc.GoColumnName}}To != 0 {
-      selector = selector.Where(entsql.LT("{{$item.TableDesc.ColumnName}}", req.{{$item.TableDesc.GoColumnName}}To))
-    }{{- end}}
-    {{- end}}
+	if req.{{$item.TableDesc.GoColumnName}}To != 0 {
+		selector = selector.Where(entsql.LT("{{$item.TableDesc.ColumnName}}", req.{{$item.TableDesc.GoColumnName}}To))
+	}{{- end}}
+	{{- end}}
 	// count 返回
 	if sqlType == SqlPageCount {
 		return selector.Query()
@@ -152,3 +302,4 @@ func buildSqlFind{{.TableNameGo}}(req *model.Find{{.TableNameGo}}Req, sqlType st
 	selector.Limit(req.Size)
 	return selector.Query()
 }
+{{end}}

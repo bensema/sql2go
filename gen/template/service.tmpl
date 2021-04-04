@@ -12,8 +12,105 @@ import (
 
 {{range $key, $T := .}}
 
+{{if eq .TableNameGo "GameResult"}}
+func (s *Service) {{.TableNameGo}}Pages(c *gin.Context, gameCode string, req *model.Find{{.TableNameGo}}Req) (reply *model.Find{{.TableNameGo}}Reply, err error) {
+	reply = new(model.Find{{.TableNameGo}}Reply)
+	reply.Data = make([]*model.{{.TableNameGo}}, 0)
+	var count int
+	var dataTmp []*model.{{.TableNameGo}}
+	if count, err = s.dao.PageFind{{.TableNameGo}}Total(c, gameCode, req); err != nil {
+		return
+	}
 
+	if count <= 0 {
+		return
+	}
 
+	if dataTmp, err = s.dao.PageFind{{.TableNameGo}}(c, gameCode, req); err != nil {
+		return
+	}
+
+	reply.Data = dataTmp
+	reply.Total = count
+	reply.Num = req.Num
+	reply.Size = req.Size
+	return
+}
+
+func (s *Service) {{.TableNameGo}}Add(c *gin.Context, gameCode string, m *model.{{.TableNameGo}}) error {
+	res, err := s.dao.Create{{.TableNameGo}}(c, gameCode, m)
+	if err != nil {
+		return err
+	}
+	id, _ := res.LastInsertId()
+	m.Id = int(id)
+	logOp := s.NewAdminLogOperate(c)
+	logOp.Content = model.LogFieldChange(m, nil, false)
+	logOp.RecordAt = xtime.Time(time.Now().Unix())
+	logOp.OperationCode = string(model.Op{{.TableNameGo}}Add)
+	logOp.OperationDisplayName = model.Op{{.TableNameGo}}Add.String()
+	logOp.Result = model.LogOpResultOk
+	_, err = s.dao.CreateLogOperate(c, logOp)
+	return err
+}
+
+func (s *Service) {{.TableNameGo}}Del(c *gin.Context, gameCode string, id int) error {
+	old, err := s.dao.Get{{.TableNameGo}}ById(c, gameCode, id)
+	if err != nil {
+		log.Warnf("warn {{.TableNameGo}}Del: %s", err)
+		return errors.New("ID不存在[-1]")
+	}
+	err = s.dao.Delete{{.TableNameGo}}ById(c, gameCode, id)
+	if err != nil {
+		return err
+	}
+	tmp := new(model.{{.TableNameGo}})
+	logOp := s.NewAdminLogOperate(c)
+	logOp.Content = model.LogFieldChange(tmp, old, true)
+	logOp.RecordAt = xtime.Time(time.Now().Unix())
+	logOp.OperationCode = string(model.Op{{.TableNameGo}}Del)
+	logOp.OperationDisplayName = model.Op{{.TableNameGo}}Del.String()
+	logOp.Result = model.LogOpResultOk
+	_, err = s.dao.CreateLogOperate(c, logOp)
+	return err
+}
+
+func (s *Service) {{.TableNameGo}}Query(c *gin.Context, gameCode string, id int) (*model.{{.TableNameGo}}, error) {
+	return s.dao.Get{{.TableNameGo}}ById(c, gameCode, id)
+}
+
+func (s *Service) {{.TableNameGo}}Update(c *gin.Context, gameCode string, m *model.{{.TableNameGo}}) error {
+	id := m.Id
+	old, err := s.dao.Get{{.TableNameGo}}ById(c, gameCode, id)
+	if err != nil {
+		log.Warnf("warn {{.TableNameGo}}Update: %s", err)
+		return errors.New("ID不存在[-2]")
+	}
+	n := structs.New(m)
+	n.TagName = "json"
+	_new := n.Map()
+
+	o := structs.New(old)
+	o.TagName = "json"
+	_old := o.Map()
+
+	for _, key := range m.Columns() {
+		if _new[key] != _old[key] {
+			_ = s.dao.Update{{.TableNameGo}}ById(c, gameCode, id, key, _new[key])
+		}
+	}
+
+	logOp := s.NewAdminLogOperate(c)
+	logOp.Content = model.LogFieldTemp("id", id, nil, false) + ";" + model.LogFieldChange(m, old, true)
+	logOp.RecordAt = xtime.Time(time.Now().Unix())
+	logOp.OperationCode = string(model.Op{{.TableNameGo}}Update)
+	logOp.OperationDisplayName = model.Op{{.TableNameGo}}Update.String()
+	logOp.Result = model.LogOpResultOk
+	_, err = s.dao.CreateLogOperate(c, logOp)
+
+	return err
+}
+{{else}}
 func (s *Service) {{.TableNameGo}}Pages(c *gin.Context, req *model.Find{{.TableNameGo}}Req) (reply *model.Find{{.TableNameGo}}Reply, err error) {
 	reply = new(model.Find{{.TableNameGo}}Reply)
 	reply.Data = make([]*model.{{.TableNameGo}}, 0)
@@ -27,7 +124,7 @@ func (s *Service) {{.TableNameGo}}Pages(c *gin.Context, req *model.Find{{.TableN
 		return
 	}
 
-	if dataTmp, err = s.dao.Find{{.TableNameGo}}(c, req); err != nil {
+	if dataTmp, err = s.dao.PageFind{{.TableNameGo}}(c, req); err != nil {
 		return
 	}
 
@@ -111,7 +208,5 @@ func (s *Service) {{.TableNameGo}}Update(c *gin.Context, m *model.{{.TableNameGo
 
 	return err
 }
-
-
-
+{{end}}
 {{end}}
