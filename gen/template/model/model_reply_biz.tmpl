@@ -1,5 +1,5 @@
+{{define "content"}}
 package model
-
 
 {{range $key, $T := .}}
 
@@ -8,4 +8,5 @@ type Find{{$T.TableNameGo}}Reply struct {
     PaginationReply
 }
 
+{{end}}
 {{end}}

@@ -1,9 +1,10 @@
+{{define "content"}}
 package internal
 
 import (
 	"database/sql"
 	entsql "entgo.io/ent/dialect/sql"
-	"xiuos/model"
+	"{{template "project"}}/model"
 	"github.com/gin-gonic/gin"
 	"strings"
 )
@@ -152,3 +153,4 @@ func buildSqlFind{{.TableNameGo}}(req *model.Find{{.TableNameGo}}Req, sqlType st
 	selector.Limit(req.Size)
 	return selector.Query()
 }
+{{end}}

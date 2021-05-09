@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/bensema/sql2go"
 	"github.com/bensema/sql2go/database"
-	"github.com/bensema/sql2go/gen"
 	"log"
 	"path"
 	"strings"
@@ -38,7 +37,6 @@ type EntityReq struct {
 func (s2g *S2G) createModel(formatList []string) (err error) {
 	// 表结构文件路径
 	createDir(path.Join(s2g.OutPath, ProjectBB))
-	createDir(path.Join(s2g.OutPath, ProjectLibrary))
 
 	createDir(path.Join(s2g.OutPath, ProjectBB, GODIR_Model))
 	createDir(path.Join(s2g.OutPath, ProjectBB, GODIRService))
@@ -47,14 +45,14 @@ func (s2g *S2G) createModel(formatList []string) (err error) {
 
 	createDir(path.Join(s2g.OutPath, ProjectBB, GODIRServer, GODIRHttp))
 
-	filePath := path.Join(s2g.OutPath, ProjectBB, GODIR_Model, "model_biz.go")
-	filePathModelReq := path.Join(s2g.OutPath, ProjectBB, GODIR_Model, "model_req_biz.go")
-	filePathModelReply := path.Join(s2g.OutPath, ProjectBB, GODIR_Model, "model_reply_biz.go")
-	filePathModelPage := path.Join(s2g.OutPath, ProjectBB, GODIR_Model, "page_biz.go")
-	opCode := path.Join(s2g.OutPath, ProjectBB, GODIR_Model, "op_code_biz.go")
+	modelBizPath := path.Join(s2g.OutPath, ProjectBB, GODIR_Model, "model_biz.go")
+	modelReqBizPath := path.Join(s2g.OutPath, ProjectBB, GODIR_Model, "model_req_biz.go")
+	modelReplyBizPath := path.Join(s2g.OutPath, ProjectBB, GODIR_Model, "model_reply_biz.go")
+	modelPageBizPath := path.Join(s2g.OutPath, ProjectBB, GODIR_Model, "page_biz.go")
+	modelopCodeBizPath := path.Join(s2g.OutPath, ProjectBB, GODIR_Model, "op_code_biz.go")
 
-	biz := path.Join(s2g.OutPath, ProjectBB, GODIRDao, "biz.go")
-	serviceBiz := path.Join(s2g.OutPath, ProjectBB, GODIRService, "service_biz.go")
+	bizPath := path.Join(s2g.OutPath, ProjectBB, GODIRDao, "biz.go")
+	serviceBizPath := path.Join(s2g.OutPath, ProjectBB, GODIRService, "service_biz.go")
 
 	// 将表结构写入文件
 	tables, err := s2g.Db.FindTables()
@@ -91,218 +89,57 @@ func (s2g *S2G) createModel(formatList []string) (err error) {
 		reqs = append(reqs, *req)
 	}
 
-	// 生成基础信息
-	err = s2g.generateModel(reqs, filePath)
+	err = s2g.GenCommon(reqs, modelBizPath, "content", TplModelBiz)
 	if err != nil {
 		log.Fatal("Create Model error>>", err)
 	}
-	err = s2g.generateModelReq(reqs, filePathModelReq)
+
+	err = s2g.GenCommon(reqs, modelReqBizPath, "content", TplModelReqBiz)
 	if err != nil {
 		log.Fatal("Create Model req error>>", err)
 	}
-	err = s2g.generateModelReply(reqs, filePathModelReply)
+
+	err = s2g.GenCommon(reqs, modelReplyBizPath, "content", TplModelReplyBiz)
 	if err != nil {
 		log.Fatal("Create Model reply error>>", err)
 	}
-	err = s2g.generateModelPage(reqs, filePathModelPage)
+
+	err = s2g.GenCommon(reqs, modelPageBizPath, "content", TplModelPageBiz)
 	if err != nil {
 		log.Fatal("Create Model page error>>", err)
 	}
-
-	err = s2g.generateModelBiz(reqs, biz)
+	err = s2g.GenCommon(reqs, bizPath, "content", TplDaoBiz, TplProject)
 	if err != nil {
-		log.Fatal("Create biz error>>", err)
+		log.Fatal("Create dao biz error>>", err)
 	}
 
-	err = s2g.generateModelServiceBiz(reqs, serviceBiz)
+	err = s2g.GenCommon(reqs, serviceBizPath, "content", TplServiceBiz, TplProject)
 	if err != nil {
-		log.Fatal("Create service biz error>>", err)
+		log.Fatal("Create service bizPath error>>", err)
 	}
 
-	err = s2g.generateModelOpCode(reqs, opCode)
+	err = s2g.GenCommon(reqs, modelopCodeBizPath, "content", TplModelOpCodeBiz)
 	if err != nil {
 		log.Fatal("Create op_code error>>", err)
 	}
 	return
 }
 
-// 创建结构实体
-func (s2g *S2G) generateModel(req []EntityReq, filePath string) (err error) {
-
-	// 加载模板文件
-	tplByte, err := gen.Asset(gen.TplModel)
+func (s2g *S2G) GenCommon(req []EntityReq, savePath string, templateName string, filenames ...string) (err error) {
+	tpl, err := template.ParseFiles(filenames...)
 	if err != nil {
-		return
-	}
-	tpl, err := template.New("model").Parse(string(tplByte))
-	if err != nil {
+		fmt.Printf("GenCommon err: %s", err)
 		return
 	}
 
 	content := bytes.NewBuffer([]byte{})
-	err = tpl.Execute(content, req)
+	err = tpl.ExecuteTemplate(content, templateName, req)
 	if err != nil {
 		fmt.Println(err)
 	}
 	// 表信息写入文件
 	con := strings.Replace(content.String(), "&#34;", `"`, -1)
-	err = WriteFile(filePath, con)
-	if err != nil {
-		return
-	}
-	return
-}
-
-func (s2g *S2G) generateModelReq(req []EntityReq, filePath string) (err error) {
-
-	// 加载模板文件
-	tplByte, err := gen.Asset(gen.TplModelReq)
-	if err != nil {
-		return
-	}
-	tpl, err := template.New("model_req").Parse(string(tplByte))
-	if err != nil {
-		return
-	}
-
-	content := bytes.NewBuffer([]byte{})
-	err = tpl.Execute(content, req)
-	if err != nil {
-		fmt.Println(err)
-	}
-	// 表信息写入文件
-	con := strings.Replace(content.String(), "&#34;", `"`, -1)
-	err = WriteFile(filePath, con)
-	if err != nil {
-		return
-	}
-	return
-}
-
-func (s2g *S2G) generateModelReply(req []EntityReq, filePath string) (err error) {
-
-	// 加载模板文件
-	tplByte, err := gen.Asset(gen.TplModelReply)
-	if err != nil {
-		return
-	}
-	tpl, err := template.New("model_reply").Parse(string(tplByte))
-	if err != nil {
-		return
-	}
-
-	content := bytes.NewBuffer([]byte{})
-	err = tpl.Execute(content, req)
-	if err != nil {
-		fmt.Println(err)
-	}
-	// 表信息写入文件
-	con := strings.Replace(content.String(), "&#34;", `"`, -1)
-	err = WriteFile(filePath, con)
-	if err != nil {
-		return
-	}
-	return
-}
-
-func (s2g *S2G) generateModelPage(req []EntityReq, filePath string) (err error) {
-
-	// 加载模板文件
-	tplByte, err := gen.Asset(gen.TplModelPage)
-	if err != nil {
-		return
-	}
-	tpl, err := template.New("page").Parse(string(tplByte))
-	if err != nil {
-		return
-	}
-
-	content := bytes.NewBuffer([]byte{})
-	err = tpl.Execute(content, req)
-	if err != nil {
-		fmt.Println(err)
-	}
-	// 表信息写入文件
-	con := strings.Replace(content.String(), "&#34;", `"`, -1)
-	err = WriteFile(filePath, con)
-	if err != nil {
-		return
-	}
-	return
-}
-
-func (s2g *S2G) generateModelBiz(req []EntityReq, filePath string) (err error) {
-
-	// 加载模板文件
-	tplByte, err := gen.Asset(gen.TplBiz)
-	if err != nil {
-		return
-	}
-	tpl, err := template.New("page").Parse(string(tplByte))
-	if err != nil {
-		return
-	}
-
-	content := bytes.NewBuffer([]byte{})
-	err = tpl.Execute(content, req)
-	if err != nil {
-		fmt.Println(err)
-	}
-	// 表信息写入文件
-	con := strings.Replace(content.String(), "&#34;", `"`, -1)
-	err = WriteFile(filePath, con)
-	if err != nil {
-		return
-	}
-	return
-}
-
-func (s2g *S2G) generateModelServiceBiz(req []EntityReq, filePath string) (err error) {
-
-	// 加载模板文件
-	tplByte, err := gen.Asset(gen.TplService)
-	if err != nil {
-		return
-	}
-	tpl, err := template.New("page").Parse(string(tplByte))
-	if err != nil {
-		return
-	}
-
-	content := bytes.NewBuffer([]byte{})
-	err = tpl.Execute(content, req)
-	if err != nil {
-		fmt.Println(err)
-	}
-	// 表信息写入文件
-	con := strings.Replace(content.String(), "&#34;", `"`, -1)
-	err = WriteFile(filePath, con)
-	if err != nil {
-		return
-	}
-	return
-}
-
-func (s2g *S2G) generateModelOpCode(req []EntityReq, filePath string) (err error) {
-
-	// 加载模板文件
-	tplByte, err := gen.Asset(gen.TplOpCode)
-	if err != nil {
-		return
-	}
-	tpl, err := template.New("page").Parse(string(tplByte))
-	if err != nil {
-		return
-	}
-
-	content := bytes.NewBuffer([]byte{})
-	err = tpl.Execute(content, req)
-	if err != nil {
-		fmt.Println(err)
-	}
-	// 表信息写入文件
-	con := strings.Replace(content.String(), "&#34;", `"`, -1)
-	err = WriteFile(filePath, con)
+	err = WriteFile(savePath, con)
 	if err != nil {
 		return
 	}

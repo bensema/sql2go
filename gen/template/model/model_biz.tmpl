@@ -1,3 +1,4 @@
+{{define "content"}}
 package model
 
 import (
@@ -24,4 +25,5 @@ func (m *{{.TableNameGo}}) Fields() []interface{} {
 return []interface{}{ {{range $j, $item := .TableDesc}} &m.{{$item.TableDesc.GoColumnName}},{{end}} }
 }
 
+{{end}}
 {{end}}

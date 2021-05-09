@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/bensema/sql2go"
-	"github.com/bensema/sql2go/gen"
 	"log"
 	"path"
 	"strings"
@@ -18,7 +17,9 @@ func (s2g *S2G) createCurd(formatList []string) (err error) {
 
 	createDir(path.Join(s2g.OutPath, ProjectBB, GODIRDao, GODIR_Internal))
 
-	s2g.generateCurdCommon(path.Join(s2g.OutPath, ProjectBB, GODIRDao, GODIR_Internal, "curd_common_biz.go"))
+	curdCommomPath := path.Join(s2g.OutPath, ProjectBB, GODIRDao, GODIR_Internal, "curd_common_biz.go")
+	req := []EntityReq{}
+	s2g.GenCommon(req, curdCommomPath, "content", TplDaoCurdCommonBiz)
 	// 将表结构写入文件
 	tables, err := s2g.Db.FindTables()
 	if err != nil {
@@ -54,7 +55,7 @@ func (s2g *S2G) createCurd(formatList []string) (err error) {
 		reqs = append(reqs, *req)
 
 		// 生成基础信息
-		err = s2g.generateDBCurd(req, filePath)
+		s2g.generateDBCurd(req, filePath, "content", TplDaoCurdBiz, TplProject)
 		if err != nil {
 			log.Fatal("Create Curd error >>", err)
 		}
@@ -65,54 +66,22 @@ func (s2g *S2G) createCurd(formatList []string) (err error) {
 }
 
 // 创建结构实体
-func (s2g *S2G) generateDBCurd(req *EntityReq, filePath string) (err error) {
+func (s2g *S2G) generateDBCurd(req *EntityReq, savePath string, templateName string, filenames ...string) (err error) {
 
-	// 加载模板文件
-	//tplByte, err := gen.Asset(gen.TplCurd)
-	tplByte, err := gen.Asset(gen.TplCurd1)
+	tpl, err := template.ParseFiles(filenames...)
 	if err != nil {
-		return
-	}
-	tpl, err := template.New("curd").Parse(string(tplByte))
-	if err != nil {
+		fmt.Printf("GenCommon err: %s", err)
 		return
 	}
 
 	content := bytes.NewBuffer([]byte{})
-	err = tpl.Execute(content, req)
+	err = tpl.ExecuteTemplate(content, templateName, req)
 	if err != nil {
 		fmt.Println(err)
 	}
 	// 表信息写入文件
 	con := strings.Replace(content.String(), "&#34;", `"`, -1)
-	err = WriteFile(filePath, con)
-	if err != nil {
-		return
-	}
-	return
-}
-
-// 创建结构实体
-func (s2g *S2G) generateCurdCommon(filePath string) (err error) {
-
-	// 加载模板文件
-	tplByte, err := gen.Asset(gen.TplCurdCommon)
-	if err != nil {
-		return
-	}
-	tpl, err := template.New("curd_common").Parse(string(tplByte))
-	if err != nil {
-		return
-	}
-
-	content := bytes.NewBuffer([]byte{})
-	err = tpl.Execute(content, nil)
-	if err != nil {
-		fmt.Println(err)
-	}
-	// 表信息写入文件
-	con := strings.Replace(content.String(), "&#34;", `"`, -1)
-	err = WriteFile(filePath, con)
+	err = WriteFile(savePath, con)
 	if err != nil {
 		return
 	}

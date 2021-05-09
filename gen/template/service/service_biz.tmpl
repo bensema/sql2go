@@ -1,9 +1,10 @@
+{{define "content"}}
 package service
 
 import (
 	"errors"
-	"xiuos/model"
-	"github.com/bensema/library/log"
+	"{{template "project"}}/model"
+	log "github.com/sirupsen/logrus"
 	"library/xtime"
 	"github.com/fatih/structs"
 	"github.com/gin-gonic/gin"
@@ -109,4 +110,5 @@ func (s *Service) {{.TableNameGo}}Update(c *gin.Context, m *model.{{.TableNameGo
 
 	return err
 }
+{{end}}
 {{end}}

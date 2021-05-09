@@ -6,7 +6,6 @@ import (
 
 const (
 	ProjectBB      = "xiuos"
-	ProjectLibrary = "library"
 	GODIR_Model    = "model"    // entity file
 	GODIR_Internal = "internal" // entity file
 	GODIRService   = "service"  // entity file

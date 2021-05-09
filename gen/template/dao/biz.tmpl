@@ -1,9 +1,10 @@
+{{define "content"}}
 package dao
 
 import (
 	"database/sql"
-	"xiuos/dao/internal"
-	"xiuos/model"
+	"{{template "project"}}/dao/internal"
+	"{{template "project"}}/model"
 	"github.com/gin-gonic/gin"
 )
 
@@ -41,4 +42,5 @@ func (d *Dao) PageFind{{.TableNameGo}}(c *gin.Context, req *model.Find{{.TableNa
 	return internal.PageFind{{.TableNameGo}}(c, d.db, req)
 }
 
+{{end}}
 {{end}}
