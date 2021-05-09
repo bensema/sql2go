@@ -2,45 +2,13 @@ package dao
 
 import (
 	"database/sql"
-	"github.com/bensema/betbit/dao/internal"
-	"github.com/bensema/betbit/model"
+	"xiuos/dao/internal"
+	"xiuos/model"
 	"github.com/gin-gonic/gin"
 )
 
 {{range $key, $T := .}}
-{{if eq .TableNameGo "GameResult"}}
-func (d *Dao) Create{{.TableNameGo}}(c *gin.Context, gameCode string, m *model.{{.TableNameGo}}) (result sql.Result, err error) {
-	return internal.Create{{.TableNameGo}}(c, d.db, gameCode, m)
-}
 
-func (d *Dao) Delete{{.TableNameGo}}ById(c *gin.Context, gameCode string, id int) error {
-	return internal.Delete{{.TableNameGo}}ById(c, d.db, gameCode, id)
-}
-
-func (d *Dao) Update{{.TableNameGo}}ById(c *gin.Context, gameCode string, id int, key string, value interface{}) error {
-	return internal.Update{{.TableNameGo}}ById(c, d.db, gameCode, id, key, value)
-}
-
-func (d *Dao) Update{{.TableNameGo}}ByIdTx(c *gin.Context, tx *sql.Tx, gameCode string, id int, key string, value interface{}) error {
-	return internal.Update{{.TableNameGo}}ByIdTx(c, tx, gameCode, id, key, value)
-}
-
-func (d *Dao) Get{{.TableNameGo}}ById(c *gin.Context, gameCode string, id int) (*model.{{.TableNameGo}}, error) {
-	return internal.Get{{.TableNameGo}}ById(c, d.db, gameCode, id)
-}
-
-func (d *Dao) Find{{.TableNameGo}}(c *gin.Context, gameCode string, req *model.Find{{.TableNameGo}}Req) ([]*model.{{.TableNameGo}}, error) {
-	return internal.Find{{.TableNameGo}}(c, d.db, gameCode, req)
-}
-
-func (d *Dao) PageFind{{.TableNameGo}}Total(c *gin.Context, gameCode string, req *model.Find{{.TableNameGo}}Req) (int, error) {
-	return internal.PageFind{{.TableNameGo}}Total(c, d.db, gameCode, req)
-}
-
-func (d *Dao) PageFind{{.TableNameGo}}(c *gin.Context, gameCode string, req *model.Find{{.TableNameGo}}Req) ([]*model.{{.TableNameGo}}, error) {
-	return internal.PageFind{{.TableNameGo}}(c, d.db, gameCode, req)
-}
-{{else}}
 func (d *Dao) Create{{.TableNameGo}}(c *gin.Context, m *model.{{.TableNameGo}}) (result sql.Result, err error) {
 	return internal.Create{{.TableNameGo}}(c, d.db, m)
 }
@@ -73,5 +41,4 @@ func (d *Dao) PageFind{{.TableNameGo}}(c *gin.Context, req *model.Find{{.TableNa
 	return internal.PageFind{{.TableNameGo}}(c, d.db, req)
 }
 
-{{end}}
 {{end}}

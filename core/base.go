@@ -5,8 +5,7 @@ import (
 )
 
 const (
-	ProjectBB      = "betbit"
-	ProjectGoAdmin = "goadmin"
+	ProjectBB      = "xiuos"
 	ProjectLibrary = "library"
 	GODIR_Model    = "model"    // entity file
 	GODIR_Internal = "internal" // entity file

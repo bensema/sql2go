@@ -7,7 +7,6 @@ import (
 	"github.com/bensema/sql2go/gen"
 	"log"
 	"path"
-	"regexp"
 	"strings"
 	"text/template"
 )
@@ -27,10 +26,6 @@ func (s2g *S2G) createCurd(formatList []string) (err error) {
 	}
 	reqs := []EntityReq{}
 	for idx, table := range tables {
-		match, err := regexp.MatchString(`^game_result_`, table.Name)
-		if match {
-			continue
-		}
 		idx++
 		filePath := path.Join(s2g.OutPath, ProjectBB, GODIRDao, GODIR_Internal, table.Name+"_curd_biz.go")
 		// 查询表结构信息

@@ -8,7 +8,6 @@ import (
 	"github.com/bensema/sql2go/gen"
 	"log"
 	"path"
-	"regexp"
 	"strings"
 	"text/template"
 )
@@ -39,11 +38,7 @@ type EntityReq struct {
 func (s2g *S2G) createModel(formatList []string) (err error) {
 	// 表结构文件路径
 	createDir(path.Join(s2g.OutPath, ProjectBB))
-	createDir(path.Join(s2g.OutPath, ProjectGoAdmin))
 	createDir(path.Join(s2g.OutPath, ProjectLibrary))
-
-	createDir(path.Join(s2g.OutPath, ProjectGoAdmin, GODIRService))
-	createDir(path.Join(s2g.OutPath, ProjectGoAdmin, GODIRServer, "http", "controller"))
 
 	createDir(path.Join(s2g.OutPath, ProjectBB, GODIR_Model))
 	createDir(path.Join(s2g.OutPath, ProjectBB, GODIRService))
@@ -61,11 +56,6 @@ func (s2g *S2G) createModel(formatList []string) (err error) {
 	biz := path.Join(s2g.OutPath, ProjectBB, GODIRDao, "biz.go")
 	serviceBiz := path.Join(s2g.OutPath, ProjectBB, GODIRService, "service_biz.go")
 
-	adminCommandBiz := path.Join(s2g.OutPath, ProjectBB, GODIRServer, GODIRHttp, "admin_command_biz.go")
-	admCmd := path.Join(s2g.OutPath, ProjectLibrary, "adm_cmd_biz.go")
-
-	bbAdminApiBiz := path.Join(s2g.OutPath, ProjectGoAdmin, GODIRServer, GODIRHttp, "controller", "bb_admin_api_biz.go")
-	bbAdminBiz := path.Join(s2g.OutPath, ProjectGoAdmin, GODIRService, "bb_admin_biz.go")
 	// 将表结构写入文件
 	tables, err := s2g.Db.FindTables()
 	if err != nil {
@@ -73,12 +63,6 @@ func (s2g *S2G) createModel(formatList []string) (err error) {
 	}
 	reqs := []EntityReq{}
 	for idx, table := range tables {
-		match, err := regexp.MatchString(`^game_result_`, table.Name)
-		if match {
-			continue
-		}
-		fmt.Println("Match: ", match, " Error: ", err)
-
 		idx++
 		// 查询表结构信息
 		tableDesc, err := s2g.Db.GetTableColumns(table.Name)
@@ -139,27 +123,6 @@ func (s2g *S2G) createModel(formatList []string) (err error) {
 	if err != nil {
 		log.Fatal("Create op_code error>>", err)
 	}
-
-	err = s2g.generateModelAdminCommandBiz(reqs, adminCommandBiz)
-	if err != nil {
-		log.Fatal("Create AdminCommandBiz error>>", err)
-	}
-
-	err = s2g.generateModelAdmCmd(reqs, admCmd)
-	if err != nil {
-		log.Fatal("Create admin cmd error>>", err)
-	}
-
-	err = s2g.generateModelBBAdminBiz(reqs, bbAdminBiz)
-	if err != nil {
-		log.Fatal("Create bb admin biz error>>", err)
-	}
-
-	err = s2g.generateModelBBAdminApiBiz(reqs, bbAdminApiBiz)
-	if err != nil {
-		log.Fatal("Create bb admin api biz error>>", err)
-	}
-
 	return
 }
 
@@ -324,110 +287,6 @@ func (s2g *S2G) generateModelOpCode(req []EntityReq, filePath string) (err error
 
 	// 加载模板文件
 	tplByte, err := gen.Asset(gen.TplOpCode)
-	if err != nil {
-		return
-	}
-	tpl, err := template.New("page").Parse(string(tplByte))
-	if err != nil {
-		return
-	}
-
-	content := bytes.NewBuffer([]byte{})
-	err = tpl.Execute(content, req)
-	if err != nil {
-		fmt.Println(err)
-	}
-	// 表信息写入文件
-	con := strings.Replace(content.String(), "&#34;", `"`, -1)
-	err = WriteFile(filePath, con)
-	if err != nil {
-		return
-	}
-	return
-}
-
-func (s2g *S2G) generateModelAdminCommandBiz(req []EntityReq, filePath string) (err error) {
-
-	// 加载模板文件
-	tplByte, err := gen.Asset(gen.TplAdminCommandBiz)
-	if err != nil {
-		return
-	}
-	tpl, err := template.New("page").Parse(string(tplByte))
-	if err != nil {
-		return
-	}
-
-	content := bytes.NewBuffer([]byte{})
-	err = tpl.Execute(content, req)
-	if err != nil {
-		fmt.Println(err)
-	}
-	// 表信息写入文件
-	con := strings.Replace(content.String(), "&#34;", `"`, -1)
-	err = WriteFile(filePath, con)
-	if err != nil {
-		return
-	}
-	return
-}
-
-func (s2g *S2G) generateModelAdmCmd(req []EntityReq, filePath string) (err error) {
-
-	// 加载模板文件
-	tplByte, err := gen.Asset(gen.TplAdminCmd)
-	if err != nil {
-		return
-	}
-	tpl, err := template.New("page").Parse(string(tplByte))
-	if err != nil {
-		return
-	}
-
-	content := bytes.NewBuffer([]byte{})
-	err = tpl.Execute(content, req)
-	if err != nil {
-		fmt.Println(err)
-	}
-	// 表信息写入文件
-	con := strings.Replace(content.String(), "&#34;", `"`, -1)
-	err = WriteFile(filePath, con)
-	if err != nil {
-		return
-	}
-	return
-}
-
-func (s2g *S2G) generateModelBBAdminBiz(req []EntityReq, filePath string) (err error) {
-
-	// 加载模板文件
-	tplByte, err := gen.Asset(gen.TplBBAdminBiz)
-	if err != nil {
-		return
-	}
-	tpl, err := template.New("page").Parse(string(tplByte))
-	if err != nil {
-		return
-	}
-
-	content := bytes.NewBuffer([]byte{})
-	err = tpl.Execute(content, req)
-	if err != nil {
-		fmt.Println(err)
-	}
-	// 表信息写入文件
-	con := strings.Replace(content.String(), "&#34;", `"`, -1)
-	err = WriteFile(filePath, con)
-	if err != nil {
-		return
-	}
-	return
-}
-
-func (s2g *S2G) generateModelBBAdminApiBiz(req []EntityReq, filePath string) (err error) {
-
-	// 加载模板文件
-	tplByte, err := gen.Asset(gen.TplBBAdminApiBiz)
 	if err != nil {
 		return
 	}
